@@ -199,10 +199,10 @@ public class NfcActivity extends AppCompatActivity {
                         showToast("Done");
                         break;
                     case ACTION_CLEAR_TAG_DATA:
-                        TagWriter.clearTagData();
+                        TagWriter.clearTagData(mifare, prefs.enableTagTypeValidation().get());
                         resultCode = Activity.RESULT_OK;
                         showToast("Done");
-                        break;;
+                        break;
                     default:
                         throw new Exception("State error. Invalid action:" + mode);
                 }

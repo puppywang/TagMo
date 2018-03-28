@@ -19,6 +19,8 @@ public class TagWriter {
     private static final byte[] COMP_WRITE_CMD = Util.hexStringToByteArray("a000");
     private static final byte[] SIG_CMD = Util.hexStringToByteArray("3c00");
 
+    private static final byte[] BLANK_PAGE = new byte[TagUtil.PAGE_SIZE];
+
     public static void writeToTagRaw(MifareUltralight mifare, byte[] tagData, boolean validateNtag) throws Exception {
         validate(mifare, tagData, validateNtag);
 
@@ -160,7 +162,42 @@ public class TagWriter {
         writePages(mifare, 32, 129, pages);
     }
 
-    public static void clearTagData(MifareUltralight mifare, )
+    static void clearTagData(MifareUltralight mifare, boolean validateNtag) throws Exception {
+        if (validateNtag) {
+            try {
+                byte[] versionInfo = mifare.transceive(new byte[]{(byte) 0x60});
+                if (versionInfo == null || versionInfo.length != 8)
+                    throw new Exception("Tag version error");
+                if (versionInfo[0x02] != (byte) 0x04 || versionInfo[0x06] != (byte) 0x11)
+                    throw new Exception("Tag is not an NTAG215");
+            } catch (Exception e) {
+                Log.e(TAG, "version information error", e);
+                throw e;
+            }
+        }
+
+        doAuth(mifare);
+
+        try {
+            fillBlankPages(mifare, 3, 129);
+            Log.d(TAG, "Wrote main data");
+        } catch (Exception e) {
+            throw new Exception("Error while fill main data (stage 1)", e);
+        }
+        try {
+            clearPassword(mifare);
+            Log.d(TAG, "Clear password");
+        } catch (Exception e) {
+            throw new Exception("Error while clear password (stage 2)", e);
+        }
+
+        try {
+            clearLockInfo(mifare);
+            Log.d(TAG, "Clear lock info");
+        } catch (Exception e) {
+            throw new Exception("Error while clear lock info (stage 3)", e);
+        }
+    }
 
     static void validate(MifareUltralight mifare, byte[] tagData, boolean validateNtag) throws Exception {
         if (tagData == null)
@@ -225,6 +262,13 @@ public class TagWriter {
         }
     }
 
+    static void fillBlankPages(MifareUltralight tag, int pagestart, int pageend) throws IOException {
+        for (int i = pagestart; i <= pageend; i++) {
+            tag.writePage(i, BLANK_PAGE);
+            Log.d(TAG, "Fill blank to page " + i);
+        }
+    }
+
     static void writePassword(MifareUltralight tag) throws IOException {
         byte[] pages0_1 = tag.readPages(0);
 
@@ -244,6 +288,15 @@ public class TagWriter {
         Log.d(TAG, "pwd done");
     }
 
+    static void clearPassword(MifareUltralight tag) throws IOException {
+        Log.d(TAG, "Writing PACK");
+        tag.writePage(0x86, new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0, (byte) 0});
+
+        Log.d(TAG, "Writing PWD");
+        tag.writePage(0x85, new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+        Log.d(TAG, "clear pwd done");
+    }
+
     static void writeLockInfo(MifareUltralight tag) throws IOException {
         byte[] pages = tag.readPages(0);
 
@@ -256,6 +309,11 @@ public class TagWriter {
         tag.writePage(132, new byte[]{(byte) 0x5F, (byte) 0x00, (byte) 0x00, (byte) 0x00}); //config
     }
 
+    static void clearLockInfo(MifareUltralight tag) throws IOException {
+        tag.writePage(131, new byte[]{(byte) 0x04, (byte) 0x00, (byte) 0x00, (byte) 0xFF}); //config
+        tag.writePage(132, new byte[]{(byte) 0x00, (byte) 0x05, (byte) 0x00, (byte) 0x00}); //config
+    }
+
     static void doAuth(MifareUltralight tag) throws Exception {
         byte[] pages0_1 = tag.readPages(0);
 
@@ -264,6 +322,28 @@ public class TagWriter {
 
         byte[] uid = TagUtil.uidFromPages(pages0_1);
         byte[] password = TagUtil.keygen(uid);
+
+        Log.d(TAG, "Password: " + Util.bytesToHex(password));
+
+        byte[] auth = new byte[]{
+                (byte) 0x1B,
+                password[0],
+                password[1],
+                password[2],
+                password[3]
+        };
+        byte[] response = tag.transceive(auth);
+        if (response == null)
+            throw new Exception("Auth result was null");
+        String respStr = Util.bytesToHex(response);
+        Log.e(TAG, "Auth response " + respStr);
+        if (!"8080".equals(respStr)) {
+            throw new Exception("Authenticaiton failed");
+        }
+    }
+
+    static void doAuthFFFFFFFF(MifareUltralight tag) throws Exception {
+        byte[] password = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
 
         Log.d(TAG, "Password: " + Util.bytesToHex(password));
 

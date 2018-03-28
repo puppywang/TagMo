@@ -97,8 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:layout_below="@id/btnShowQRCode"
-                    android:text="Clear Card"
-                    android:enabled="false"/>
+                    android:text="Clear Card"/>
 
                 <Button
                     android:id="@+id/btnScanQRCode"
