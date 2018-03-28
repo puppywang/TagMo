@@ -38,6 +38,8 @@ public class NfcActivity extends AppCompatActivity {
     public static final String ACTION_WRITE_TAG_RAW = "com.hiddenramblings.tagmo.WRITE_TAG_RAW";
     public static final String ACTION_WRITE_TAG_DATA = "com.hiddenramblings.tagmo.WRITE_TAG_DATA";
 
+    public static final String ACTION_CLEAR_TAG_DATA = "com.hiddenramblings.tagmo.CLEAR_TAG_DATA";
+
     public static final String ACTION_NFC_SCANNED = "com.hiddenramblings.tagmo.NFC_SCANNED";
 
     public static final String EXTRA_TAG_DATA = "com.hiddenramblings.tagmo.EXTRA_TAG_DATA";
@@ -97,6 +99,9 @@ public class NfcActivity extends AppCompatActivity {
                 break;
             case ACTION_SCAN_TAG:
                 setTitle("Scan Tag");
+                break;
+            case ACTION_CLEAR_TAG_DATA:
+                setTitle("Clear non-locked tag data");
                 break;
             default:
                 setTitle("Error");
@@ -193,6 +198,11 @@ public class NfcActivity extends AppCompatActivity {
                         result.putExtra(EXTRA_TAG_DATA, data);
                         showToast("Done");
                         break;
+                    case ACTION_CLEAR_TAG_DATA:
+                        TagWriter.clearTagData();
+                        resultCode = Activity.RESULT_OK;
+                        showToast("Done");
+                        break;;
                     default:
                         throw new Exception("State error. Invalid action:" + mode);
                 }

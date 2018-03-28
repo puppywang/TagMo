@@ -160,6 +160,8 @@ public class TagWriter {
         writePages(mifare, 32, 129, pages);
     }
 
+    public static void clearTagData(MifareUltralight mifare, )
+
     static void validate(MifareUltralight mifare, byte[] tagData, boolean validateNtag) throws Exception {
         if (tagData == null)
             throw new Exception("Cannot validate: no source data loaded to compare.");

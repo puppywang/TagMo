@@ -695,6 +695,13 @@ public class MainActivity extends AppCompatActivity {
         startQRActivity(intent, -1);
     }
 
+    @Click(R.id.btnClearCard)
+    void clearCard() {
+        Intent intent = new Intent(this, NfcActivity_.class);
+        intent.setAction(NfcActivity.ACTION_CLEAR_TAG_DATA);
+        startActivityForResult(intent, NFC_ACTIVITY);
+    }
+
     @Click(R.id.btnScanQRCode)
     void scanQRCode() {
         Intent intent = new Intent("com.google.zxing.client.android.SCAN");

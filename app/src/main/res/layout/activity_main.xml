@@ -92,6 +92,15 @@
                     android:enabled="false"/>
 
                 <Button
+                    android:id="@+id/btnClearCard"
+                    android:layout_width="@dimen/main_buttons_width"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_below="@id/btnShowQRCode"
+                    android:text="Clear Card"
+                    android:enabled="false"/>
+
+                <Button
                     android:id="@+id/btnScanQRCode"
                     android:layout_width="@dimen/main_buttons_width"
                     android:layout_height="wrap_content"
@@ -121,7 +130,7 @@
                     android:id="@+id/cbAutoSaveOnScan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/btnScanQRCode"
+                    android:layout_below="@+id/btnClearCard"
                     android:text="Auto save scanned tags"/>
 
                 <CheckBox
